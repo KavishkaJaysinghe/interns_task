@@ -1,0 +1,49 @@
+trigger:
+- pip
+
+pool:
+  name: azure-managed-devops-pool-1
+
+variables:
+  npm_config_cache: $(Pipeline.Workspace)/.npm
+
+steps:
+- task: NodeTool@0
+  inputs:
+    versionSpec: '18.x'
+  displayName: 'Install Node.js'
+
+- task: Cache@2
+  inputs:
+    key: 'npm | "$(Agent.OS)" | package-lock.json'
+    restoreKeys: |
+      npm | "$(Agent.OS)"
+    path: $(npm_config_cache)
+  displayName: 'Cache npm packages'
+
+- script: npm ci
+  displayName: 'Install dependencies'
+  workingDirectory: generated-app
+
+- script: npm run build
+  displayName: 'Build React app'
+  workingDirectory: generated-app
+
+- script: npm test -- --watchAll=false --ci
+  condition: and(succeeded(), ne(variables['SKIP_TESTS'], 'true'))
+  displayName: 'Run Tests'
+  workingDirectory: generated-app
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    pathToPublish: '$(System.DefaultWorkingDirectory)/generated-app/dist'
+    artifactName: 'ui-build'
+    publishLocation: 'Container'
+  displayName: 'Publish Artifacts'
+
+- task: AzureStaticWebApp@0
+  inputs:
+    azure_static_web_apps_api_token: '$(AZURE_STATIC_WEB_APP_TOKEN)'
+    app_location: 'generated-app'
+    output_location: 'dist'
+  displayName: 'Deploy to Azure Static Web App'
