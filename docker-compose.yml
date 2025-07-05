@@ -1,0 +1,10 @@
+version: '3'
+services:
+  frontend:
+    build: ./generated-app
+    ports:
+      - "80:80"
+  backend:
+    build: ./backend
+    ports:
+      - "5000:5000"

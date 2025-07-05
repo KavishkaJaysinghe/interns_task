@@ -1,0 +1,32 @@
+properties:
+  managedEnvironmentId: /subscriptions/{subscription-id}/resourceGroups/{rg-name}/providers/Microsoft.App/managedEnvironments/mern-app-env
+  configuration:
+    registries:
+      - server: yourregistry.azurecr.io
+        username: your-username
+        passwordSecretRef: container-registry-password
+    ingress:
+      external: true
+      targetPort: 80
+      allowInsecure: false
+      traffic:
+        - weight: 100
+          latestRevision: true
+  template:
+    containers:
+      - image: yourregistry.azurecr.io/mern-app-frontend:latest
+        name: frontend
+        env:
+          - name: REACT_APP_API_URL
+            value: https://mern-backend.{environment-domain}
+        resources:
+          cpu: 0.25
+          memory: 0.5Gi
+    scale:
+      minReplicas: 1
+      maxReplicas: 5
+      rules:
+        - name: http-scaling
+          http:
+            metadata:
+              concurrentRequests: "50"

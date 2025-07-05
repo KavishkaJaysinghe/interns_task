@@ -1,0 +1,170 @@
+trigger:
+  branches:
+    include:
+      - main
+      - develop
+
+variables:
+  - group: 'mern-container-apps-variables'
+  - name: dockerRegistryServiceConnection
+    value: 'your-docker-registry-connection'
+  - name: imageRepository
+    value: 'mern-app'
+  - name: containerRegistry
+    value: 'yourregistry.azurecr.io'
+  - name: tag
+    value: '$(Build.BuildId)'
+  - name: resourceGroupName
+    value: 'mern-app-rg'
+  - name: containerAppEnvironment
+    value: 'mern-app-env'
+  - name: sonarQubeServiceConnection
+    value: 'your-sonarqube-connection'
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+stages:
+- stage: CodeQuality
+  displayName: Code Quality Analysis
+  jobs:
+  - job: SonarQubeAnalysis
+    displayName: SonarQube Analysis
+    steps:
+    - task: NodeTool@0
+      displayName: 'Install Node.js'
+      inputs:
+        versionSpec: '18.x'
+    
+    - task: SonarQubePrepare@5
+      displayName: 'Prepare SonarQube analysis'
+      inputs:
+        SonarQube: '$(sonarQubeServiceConnection)'
+        scannerMode: 'CLI'
+        configMode: 'manual'
+        cliProjectKey: 'mern-app'
+        cliProjectName: 'MERN Application'
+        cliProjectVersion: '$(Build.BuildNumber)'
+        cliSources: '.'
+        extraProperties: |
+          sonar.exclusions=**/node_modules/**,**/build/**,**/dist/**,**/*.test.js,**/*.spec.js
+          sonar.javascript.lcov.reportPaths=frontend/coverage/lcov.info,backend/coverage/lcov.info
+          sonar.typescript.lcov.reportPaths=frontend/coverage/lcov.info
+          sonar.coverage.exclusions=**/*.test.js,**/*.spec.js,**/jest.config.js,**/webpack.config.js
+    
+    # Frontend Analysis
+    - script: |
+        cd frontend
+        npm ci
+        npm run test:coverage
+      displayName: 'Frontend - Install dependencies and run tests with coverage'
+    
+    - script: |
+        cd frontend
+        npm run lint:sonar
+      displayName: 'Frontend - Run ESLint for SonarQube'
+      continueOnError: true
+    
+    # Backend Analysis
+    - script: |
+        cd backend
+        npm ci
+        npm run test:coverage
+      displayName: 'Backend - Install dependencies and run tests with coverage'
+    
+    - script: |
+        cd backend
+        npm run lint:sonar
+      displayName: 'Backend - Run ESLint for SonarQube'
+      continueOnError: true
+    
+    - task: SonarQubeAnalyze@5
+      displayName: 'Run SonarQube analysis'
+    
+    - task: SonarQubePublish@5
+      displayName: 'Publish SonarQube results'
+      inputs:
+        pollingTimeoutSec: '300'
+
+- stage: Build
+  displayName: Build and Push Images
+  dependsOn: CodeQuality
+  condition: succeeded()
+  jobs:
+  - job: BuildFrontend
+    displayName: Build Frontend
+    steps:
+    - task: Docker@2
+      displayName: Build and push frontend image
+      inputs:
+        command: buildAndPush
+        repository: $(imageRepository)-frontend
+        dockerfile: frontend/Dockerfile
+        containerRegistry: $(dockerRegistryServiceConnection)
+        tags: |
+          $(tag)
+          latest
+
+  - job: BuildBackend
+    displayName: Build Backend
+    steps:
+    - task: Docker@2
+      displayName: Build and push backend image
+      inputs:
+        command: buildAndPush
+        repository: $(imageRepository)-backend
+        dockerfile: backend/Dockerfile
+        containerRegistry: $(dockerRegistryServiceConnection)
+        tags: |
+          $(tag)
+          latest
+
+- stage: Deploy
+  displayName: Deploy to Container Apps
+  dependsOn: Build
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+  jobs:
+  - deployment: Deploy
+    displayName: Deploy to Azure Container Apps
+    environment: 'production'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: AzureResourceManagerTemplateDeployment@3
+            displayName: Deploy Container Apps
+            inputs:
+              deploymentScope: 'Resource Group'
+              azureResourceManagerConnection: 'your-azure-connection'
+              subscriptionId: 'your-subscription-id'
+              action: 'Create Or Update Resource Group'
+              resourceGroupName: '$(resourceGroupName)'
+              location: 'East US'
+              templateLocation: 'Linked artifact'
+              csmFile: 'container-apps-template.json'
+              overrideParameters: |
+                -frontendImage $(containerRegistry)/$(imageRepository)-frontend:$(tag)
+                -backendImage $(containerRegistry)/$(imageRepository)-backend:$(tag)
+                -mongoConnectionString $(MONGODB_CONNECTION_STRING)
+                -containerRegistryServer $(containerRegistry)
+                -containerRegistryUsername $(CONTAINER_REGISTRY_USERNAME)
+                -containerRegistryPassword $(CONTAINER_REGISTRY_PASSWORD)
+
+          - task: AzureCLI@2
+            displayName: 'Update Container Apps'
+            inputs:
+              azureSubscription: 'your-azure-connection'
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                # Update backend container app
+                az containerapp update \
+                  --name mern-backend \
+                  --resource-group $(resourceGroupName) \
+                  --image $(containerRegistry)/$(imageRepository)-backend:$(tag)
+                
+                # Update frontend container app
+                az containerapp update \
+                  --name mern-frontend \
+                  --resource-group $(resourceGroupName) \
+                  --image $(containerRegistry)/$(imageRepository)-frontend:$(tag)
