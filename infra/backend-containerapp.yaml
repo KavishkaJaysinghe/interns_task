@@ -1,0 +1,50 @@
+properties:
+  managedEnvironmentId: /subscriptions/{subscription-id}/resourceGroups/{rg-name}/providers/Microsoft.App/managedEnvironments/mern-app-env
+  configuration:
+    secrets:
+      - name: mongodb-connection-string
+        value: your-mongodb-connection-string
+    registries:
+      - server: yourregistry.azurecr.io
+        username: your-username
+        passwordSecretRef: container-registry-password
+    ingress:
+      external: true
+      targetPort: 5000
+      allowInsecure: false
+      traffic:
+        - weight: 100
+          latestRevision: true
+  template:
+    containers:
+      - image: yourregistry.azurecr.io/mern-app-backend:latest
+        name: backend
+        env:
+          - name: MONGODB_URI
+            secretRef: mongodb-connection-string
+          - name: NODE_ENV
+            value: production
+          - name: PORT
+            value: "5000"
+        resources:
+          cpu: 0.5
+          memory: 1Gi
+        probes:
+          - type: Liveness
+            httpGet:
+              path: /health
+              port: 5000
+            periodSeconds: 30
+          - type: Readiness
+            httpGet:
+              path: /health
+              port: 5000
+            periodSeconds: 10
+    scale:
+      minReplicas: 1
+      maxReplicas: 10
+      rules:
+        - name: http-scaling
+          http:
+            metadata:
+              concurrentRequests: "30"

@@ -1,0 +1,23 @@
+# Custom Quality Gate Rules
+conditions:
+  - metric: coverage
+    operator: LT
+    threshold: 80
+  - metric: duplicated_lines_density
+    operator: GT
+    threshold: 3
+  - metric: maintainability_rating
+    operator: GT
+    threshold: 1
+  - metric: reliability_rating
+    operator: GT
+    threshold: 1
+  - metric: security_rating
+    operator: GT
+    threshold: 1
+  - metric: sqale_rating
+    operator: GT
+    threshold: 1
+  - metric: security_hotspots_reviewed
+    operator: LT
+    threshold: 100
