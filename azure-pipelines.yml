@@ -41,7 +41,7 @@ stages:
     # Frontend Analysis
     - script: |
         cd generated-app
-        npm ci
+        npm install
         npm run test:coverage
       displayName: 'Frontend - Install dependencies and run tests with coverage'
     
