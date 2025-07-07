@@ -3,7 +3,7 @@ trigger:
     include:
       - master
   batch: true
-  
+
 variables:
   - group: 'mern-container-apps-variables'
 
@@ -40,7 +40,7 @@ stages:
     
     # Frontend Analysis
     - script: |
-        cd frontend
+        cd generated-app
         npm ci
         npm run test:coverage
       displayName: 'Frontend - Install dependencies and run tests with coverage'
