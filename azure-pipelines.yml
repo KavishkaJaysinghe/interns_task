@@ -102,52 +102,52 @@ stages:
           $(tag)
           latest
 
-- stage: Deploy
-  displayName: Deploy to Container Apps
-  dependsOn: Build
-  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
-  jobs:
-  - deployment: Deploy
-    displayName: Deploy to Azure Container Apps
-    environment: 'production'
-    strategy:
-      runOnce:
-        deploy:
-          steps:
-          - task: AzureResourceManagerTemplateDeployment@3
-            displayName: Deploy Container Apps
-            inputs:
-              deploymentScope: 'Resource Group'
-              azureResourceManagerConnection: 'your-azure-connection'
-              subscriptionId: 'your-subscription-id'
-              action: 'Create Or Update Resource Group'
-              resourceGroupName: '$(resourceGroupName)'
-              location: 'East US'
-              templateLocation: 'Linked artifact'
-              csmFile: 'container-apps-template.json'
-              overrideParameters: |
-                -frontendImage $(containerRegistry)/$(imageRepository)-frontend:$(tag)
-                -backendImage $(containerRegistry)/$(imageRepository)-backend:$(tag)
-                -mongoConnectionString $(MONGODB_CONNECTION_STRING)
-                -containerRegistryServer $(containerRegistry)
-                -containerRegistryUsername $(CONTAINER_REGISTRY_USERNAME)
-                -containerRegistryPassword $(CONTAINER_REGISTRY_PASSWORD)
+# - stage: Deploy
+#   displayName: Deploy to Container Apps
+#   dependsOn: Build
+#   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+#   jobs:
+#   - deployment: Deploy
+#     displayName: Deploy to Azure Container Apps
+#     environment: 'production'
+#     strategy:
+#       runOnce:
+#         deploy:
+#           steps:
+#           - task: AzureResourceManagerTemplateDeployment@3
+#             displayName: Deploy Container Apps
+#             inputs:
+#               deploymentScope: 'Resource Group'
+#               azureResourceManagerConnection: 'your-azure-connection'
+#               subscriptionId: 'your-subscription-id'
+#               action: 'Create Or Update Resource Group'
+#               resourceGroupName: '$(resourceGroupName)'
+#               location: 'East US'
+#               templateLocation: 'Linked artifact'
+#               csmFile: 'container-apps-template.json'
+#               overrideParameters: |
+#                 -frontendImage $(containerRegistry)/$(imageRepository)-frontend:$(tag)
+#                 -backendImage $(containerRegistry)/$(imageRepository)-backend:$(tag)
+#                 -mongoConnectionString $(MONGODB_CONNECTION_STRING)
+#                 -containerRegistryServer $(containerRegistry)
+#                 -containerRegistryUsername $(CONTAINER_REGISTRY_USERNAME)
+#                 -containerRegistryPassword $(CONTAINER_REGISTRY_PASSWORD)
 
-          - task: AzureCLI@2
-            displayName: 'Update Container Apps'
-            inputs:
-              azureSubscription: 'your-azure-connection'
-              scriptType: 'bash'
-              scriptLocation: 'inlineScript'
-              inlineScript: |
-                # Update backend container app
-                az containerapp update \
-                  --name mern-backend \
-                  --resource-group $(resourceGroupName) \
-                  --image $(containerRegistry)/$(imageRepository)-backend:$(tag)
+#           - task: AzureCLI@2
+#             displayName: 'Update Container Apps'
+#             inputs:
+#               azureSubscription: 'your-azure-connection'
+#               scriptType: 'bash'
+#               scriptLocation: 'inlineScript'
+#               inlineScript: |
+#                 # Update backend container app
+#                 az containerapp update \
+#                   --name mern-backend \
+#                   --resource-group $(resourceGroupName) \
+#                   --image $(containerRegistry)/$(imageRepository)-backend:$(tag)
                 
-                # Update frontend container app
-                az containerapp update \
-                  --name mern-frontend \
-                  --resource-group $(resourceGroupName) \
-                  --image $(containerRegistry)/$(imageRepository)-frontend:$(tag)
+#                 # Update frontend container app
+#                 az containerapp update \
+#                   --name mern-frontend \
+#                   --resource-group $(resourceGroupName) \
+#                   --image $(containerRegistry)/$(imageRepository)-frontend:$(tag)
