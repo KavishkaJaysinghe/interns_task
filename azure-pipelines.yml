@@ -3,9 +3,12 @@ trigger:
     include:
       - master
   batch: true
+  
+variables:
+  - group: 'mern-container-apps-variables'
 
 pool:
-  name: azure-managed-devops-pool-1
+  name: Azure Pipelines
 
 stages:
 - stage: CodeQuality
