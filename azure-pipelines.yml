@@ -4,23 +4,6 @@ trigger:
       - master
   batch: true
 
-variables:
-  - group: 'mern-container-apps-variables'
-  - name: dockerRegistryServiceConnection
-    value: 'your-docker-registry-connection'
-  - name: imageRepository
-    value: 'mern-app'
-  - name: containerRegistry
-    value: 'yourregistry.azurecr.io'
-  - name: tag
-    value: '$(Build.BuildId)'
-  - name: resourceGroupName
-    value: 'mern-app-rg'
-  - name: containerAppEnvironment
-    value: 'mern-app-env'
-  - name: sonarQubeServiceConnection
-    value: 'your-sonarqube-connection'
-
 pool:
   name: azure-managed-devops-pool-1
 
