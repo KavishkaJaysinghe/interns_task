@@ -2,6 +2,7 @@ trigger:
   branches:
     include:
       - master
+  batch: true
 
 variables:
   - group: 'mern-container-apps-variables'
@@ -21,7 +22,7 @@ variables:
     value: 'your-sonarqube-connection'
 
 pool:
-  vmImage: 'ubuntu-latest'
+  name: azure-managed-devops-pool-1
 
 stages:
 - stage: CodeQuality
