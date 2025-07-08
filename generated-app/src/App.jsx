@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
-import Home from "./pages/Dashboard";
+import Dashboard from "./pages/Dashboard";
 import Completed from "./pages/Completed";
 import About from "./pages/About";
 import './App.css'
@@ -31,7 +31,7 @@ function App() {
         <Header darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
         <main className="flex-1">
           <Routes>
-            <Route path="/" element={<Home />} />
+            <Route path="/" element={<Dashboard />} />
             <Route path="/completed" element={<Completed />} />
             <Route path="/about" element={<About />} />
           </Routes>
