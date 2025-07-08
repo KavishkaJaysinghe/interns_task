@@ -44,7 +44,7 @@ stages:
         npm install
         npm run test:coverage
       displayName: 'Frontend - Install dependencies and run tests with coverage'
-    continueOnError: true
+      continueOnError: true
 
     - script: |
         cd generated-app
