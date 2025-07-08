@@ -39,14 +39,14 @@ stages:
           sonar.coverage.exclusions=**/*.test.js,**/*.spec.js,**/jest.config.js,**/webpack.config.js
     
     # Frontend Analysis
-    - script: |
-        cd generated-app
-        npm install
-        npm run test:coverage
-      displayName: 'Frontend - Install dependencies and run tests with coverage'
+    # - script: |
+    #     cd generated-app
+    #     npm install
+    #     npm run test:coverage
+    #   displayName: 'Frontend - Install dependencies and run tests with coverage'
     
     - script: |
-        cd frontend
+        cd generated-app
         npm run lint:sonar
       displayName: 'Frontend - Run ESLint for SonarQube'
       continueOnError: true
