@@ -34,8 +34,8 @@ stages:
         cliSources: '.'
         extraProperties: |
           sonar.exclusions=**/node_modules/**,**/build/**,**/dist/**,**/*.test.js,**/*.spec.js
-          sonar.javascript.lcov.reportPaths=frontend/coverage/lcov.info,backend/coverage/lcov.info
-          sonar.typescript.lcov.reportPaths=frontend/coverage/lcov.info
+          sonar.javascript.lcov.reportPaths=generated-app/coverage/lcov.info,backend/coverage/lcov.info
+          sonar.typescript.lcov.reportPaths=generated-app/coverage/lcov.info
           sonar.coverage.exclusions=**/*.test.js,**/*.spec.js,**/jest.config.js,**/webpack.config.js
     
     # Frontend Analysis
@@ -150,9 +150,4 @@ stages:
 #                   --name mern-backend \
 #                   --resource-group $(resourceGroupName) \
 #                   --image $(containerRegistry)/$(imageRepository)-backend:$(tag)
-                
-#                 # Update frontend container app
-#                 az containerapp update \
-#                   --name mern-frontend \
-#                   --resource-group $(resourceGroupName) \
-#                   --image $(containerRegistry)/$(imageRepository)-frontend:$(tag)
+#                 
