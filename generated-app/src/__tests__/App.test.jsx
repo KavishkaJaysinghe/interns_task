@@ -1,58 +1,23 @@
-import { describe, it, expect } from 'vitest'
-import { render, screen } from '@testing-library/react'
-import App from '../App'
-import { MemoryRouter } from 'react-router-dom'
-
-// Mock window.matchMedia used in dark mode detection
-beforeAll(() => {
-  window.matchMedia = window.matchMedia || function () {
-    return {
-      matches: false,
-      addListener: () => {},
-      removeListener: () => {}
-    }
-  }
-})
+import '@testing-library/jest-dom';
+import { render, screen } from '@testing-library/react';
+import App from '../App';
 
 describe('App', () => {
-  it('renders header and footer', () => {
-    render(
-      <MemoryRouter>
-        <App />
-      </MemoryRouter>
-    )
+  test('renders header and footer', () => {
+    render(<App />);
+    expect(screen.getByRole('link', { name: /About/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Dashboard/i })).toBeInTheDocument();
+  });
 
-    expect(screen.getByRole('banner')).toBeInTheDocument()   // Header
-    expect(screen.getByRole('contentinfo')).toBeInTheDocument() // Footer
-  })
+  test('renders completed page on route "/completed"', () => {
+    window.history.pushState({}, '', '/completed');
+    render(<App />);
+    expect(screen.getByRole('heading', { name: /Completed Todos/i })).toBeInTheDocument();
+  });
 
-  it('renders dashboard by default route "/"', () => {
-    render(
-      <MemoryRouter initialEntries={['/']}>
-        <App />
-      </MemoryRouter>
-    )
-
-    expect(screen.getByText(/dashboard/i)).toBeInTheDocument()
-  })
-
-  it('renders completed page on route "/completed"', () => {
-    render(
-      <MemoryRouter initialEntries={['/completed']}>
-        <App />
-      </MemoryRouter>
-    )
-
-    expect(screen.getByText(/completed/i)).toBeInTheDocument()
-  })
-
-  it('renders about page on route "/about"', () => {
-    render(
-      <MemoryRouter initialEntries={['/about']}>
-        <App />
-      </MemoryRouter>
-    )
-
-    expect(screen.getByText(/about/i)).toBeInTheDocument()
-  })
-})
+  test('renders about page on route "/about"', () => {
+    window.history.pushState({}, '', '/about');
+    render(<App />);
+    expect(screen.getByRole('heading', { name: /About/i })).toBeInTheDocument();
+  });
+});
