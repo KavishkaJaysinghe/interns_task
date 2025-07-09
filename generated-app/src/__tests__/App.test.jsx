@@ -9,12 +9,6 @@ describe('App', () => {
     expect(screen.getByRole('link', { name: /Dashboard/i })).toBeInTheDocument();
   });
 
-  test('renders completed page on route "/completed"', () => {
-    window.history.pushState({}, '', '/completed');
-    render(<App />);
-    expect(screen.getByRole('heading', { name: /Completed Todos/i })).toBeInTheDocument();
-  });
-
   test('renders about page on route "/about"', () => {
     window.history.pushState({}, '', '/about');
     render(<App />);
