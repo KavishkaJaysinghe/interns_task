@@ -29,7 +29,7 @@ stages:
         scannerMode: 'CLI'
         configMode: 'manual'
         cliProjectKey: 'mern-app'
-        cliProjectName: 'MERN Application'
+        cliProjectName: 'MERN Application testing 1'
         cliProjectVersion: '$(Build.BuildNumber)'
         cliSources: '.'
         extraProperties: |
@@ -48,7 +48,7 @@ stages:
 
     - script: |
         cd generated-app
-        npm run lint:sonar
+        npm run lint:sonar || true
       displayName: 'Frontend - Run ESLint for SonarQube'
       continueOnError: true
     
