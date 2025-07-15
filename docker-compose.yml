@@ -1,10 +1,33 @@
-version: '3'
 services:
-  frontend:
-    build: ./generated-app
+  mongodb:
+    image: mongo
+    container_name: mongodb
     ports:
-      - "80:80"
+      - "27017:27017"
+    restart: unless-stopped
+
   backend:
-    build: ./backend
+    build:
+      context: ./backend
+    container_name: backend
+    image: myapp/backend:latest
     ports:
       - "5000:5000"
+    env_file:
+      - .env
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+
+  frontend:
+    build:
+      context: ./generated-app
+    container_name: frontend
+    image: myapp/frontend:latest
+    ports:
+      - "80:80"
+    restart: unless-stopped
