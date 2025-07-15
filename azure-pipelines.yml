@@ -74,6 +74,69 @@ stages:
       inputs:
         pollingTimeoutSec: '300'
 
+- stage: ComposeTest
+  displayName: Run Docker Compose
+  dependsOn: CodeQuality
+  condition: succeeded()
+  jobs:
+  - job: ComposeRun
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - task: DockerInstaller@0
+
+    - script: |
+        docker-compose -f docker-compose.yml build
+      displayName: Build Docker Compose
+
+    - script: |
+        docker-compose -f docker-compose.yml up -d
+      displayName: Run Containers
+
+    - script: |
+        sleep 20
+        docker inspect --format='{{json .State.Health.Status}}' backend
+      displayName: Wait for Backend Health
+
+    - script: docker ps -a
+      displayName: Show Running Containers
+
+    - script: docker-compose down
+      displayName: Cleanup Containers
+
+- stage: Build
+  displayName: Build and Push Docker Images
+  dependsOn: ComposeTest
+  condition: succeeded()
+  jobs:
+  - job: DockerBuildPush
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - task: DockerInstaller@0
+
+    - task: Docker@2
+      displayName: Build and Push Frontend Image
+      inputs:
+        command: buildAndPush
+        repository: $(imageRepository)-frontend
+        dockerfile: generated-app/Dockerfile
+        containerRegistry: $(dockerRegistryServiceConnection)
+        tags: |
+          $(tag)
+          latest
+        arguments: '--build-arg MONGO_URI=$(MONGO_URI)'
+
+    - task: Docker@2
+      displayName: Build and Push Backend Image
+      inputs:
+        command: buildAndPush
+        repository: $(imageRepository)-backend
+        dockerfile: backend/Dockerfile
+        containerRegistry: $(dockerRegistryServiceConnection)
+        tags: |
+          $(tag)
+          latest
 # - stage: Build
 #   displayName: Build and Push Images
 #   dependsOn: CodeQuality

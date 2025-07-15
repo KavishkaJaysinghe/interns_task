@@ -1,5 +1,13 @@
 FROM node:18-alpine
 
+# Define build-time variables (optional, if you want to use --build-arg)
+ARG MONGO_URI
+ARG JWT_SECRET
+
+# Set environment variables (they can be passed securely during build)
+ENV MONGO_URI=$MONGO_URI
+ENV JWT_SECRET=$JWT_SECRET
+
 WORKDIR /app
 
 # Copy package files

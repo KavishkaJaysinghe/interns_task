@@ -9,12 +9,14 @@ services:
   backend:
     build:
       context: ./backend
+      args:
+        - MONGO_URI=${MONGO_URI}
     container_name: backend
     image: myapp/backend:latest
     ports:
       - "5000:5000"
     env_file:
-      - .env
+      - ./backend/.env
 
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
